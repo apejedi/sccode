@@ -69,7 +69,7 @@ m = Pbind(
 	\instrument, \Bass,
 	//\freq, Pxrand(~freqs, inf),
 	//\freq, Pseq(5.collect({~freqs.choose}), inf),
-	\freq, Pwalk(~freqs, Pwhite(0, 8, inf)),
+	\freq, Pwalk(~freqs, Prand([3, 5, 7], inf)),
 	\len,1,
 	\level, 0.4
 ).play(~clock);

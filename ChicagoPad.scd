@@ -17,8 +17,9 @@ SynthDef(\ChicagoPad, { |out = 0, freq = 440, cutoff = 500, amp = 0.2|
 }).send;
 )
 
-Synth(\ChicagoPad, [\freq, 46.midicps])
+x = Synth(\ChicagoPad, [\freq, 46.midicps])
 
+x.free
 
 Synth(\ChicagoPad, [\freq, 57.midicps])
 
