@@ -58,7 +58,7 @@ x = {
 	w = DPW4Saw.ar(lagfr, 0.5 + (wv ** 4 * 550)).softclip;
 	//w = DPW4Saw.ar(fr, 0.5).softclip;
 	ampComp = (1.05-wv) ** 6 + 1;
-	//w = w * 0.9* ampComp * LFDNoise3.ar(0.5,0.04,1);
+	w = w * 0.9* ampComp * LFDNoise3.ar(0.5,0.04,1);
 	acInt = LPF.ar(ac*12, 1);
 	//Poll.kr(poller, acInt, "accent");
 	fenv = Decay2.ar(et*0.16 + (acInt * 0.02 * accMod) , 0.01, 0.12)  * LFDNoise3.ar(0.2,0.003,1);

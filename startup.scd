@@ -20,3 +20,4 @@ s.boot;
 )
 
 s.shutdown
+s.plotTree
