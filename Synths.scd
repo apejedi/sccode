@@ -19,19 +19,19 @@ SynthDef(\vibPad, {
 )
 (
 SynthDef(\sawPad, {
-	|freq = 300, gate = 1, outBus = 0, amp = 1|
+	|freq = 300, gate = 1, outBus = 0, amp = 1, cutoff =1000, cutoff2 = 3000, fdur = 3, release = 1|
 	var sig, sig2, env;
 	sig = VarSaw.ar(freq, width: LinLin.kr(LFTri.kr(LinLin.kr(SinOsc.kr(100), -1, 1, 2, 10)), -1, 1, 0.2, 1.5)) * 0.1;
 	sig2 = SawDPW.ar([freq, freq * 1.0001]);
 	sig = Mix.ar(Mix.ar(sig2));
 	sig = DFM1.ar(sig,
-		XLine.kr(1000, 3000, 3)
+		XLine.kr(cutoff, cutoff2, fdur)
 		// LinLin.kr(SinOsc.kr(6), -1, 1, 1000, 4000)
 	);
-	sig = BHiShelf.ar(sig, 4000, db: -18);
-	// sig = BPeakEQ.ar(sig, XLine.kr(freq, freq * 7.midiratio, 3), db: 12);
+	// sig = BHiShelf.ar(sig, 1000, db: -18);
+	// sig = MoogVCF.ar(sig, 1500, 0.3);
 	// sig = LPF.ar(sig, LinLin.kr(SinOsc.kr(LinLin.kr(SinOsc.kr(LinLin.kr(SinOsc.kr(0.5), -1, 1, 1, 12)), -1, 1, 1, 12)), -1, 1, 1000, 5000));
-	env = EnvGen.kr(Env.adsr(releaseTime: 1), gate: gate, doneAction: 2);
+	env = EnvGen.kr(Env.adsr(releaseTime: release), gate: gate, doneAction: 2);
 	sig = sig * env * amp;
 	Out.ar(outBus, sig!2);
 }).add
@@ -93,5 +93,18 @@ SynthDef(\fm2, {
 	Out.ar(outBus, sig !2)
 }).add
 )
-
+(
+SynthDef(\pulsePad, {
+	|freq = 200, gate = 1, outBus = 0, fdur = 3, amp = 1, attack = 0.01, release = 1, decay = 0.3|
+	var sig, sig2, env;
+	sig = Pulse.ar(freq, width: 0.9);
+	sig2 = SawDPW.ar(freq * LinExp.kr(LFNoise1.kr(2), -1, 1, 0.0001, 0.1).midiratio) * 0.3;
+	sig = Mix.ar([sig, sig2]);
+	// sig = DFM1.ar(sig, XLine.kr(500, 1500, 2));
+	sig = MoogFF.ar(sig, freq * XLine.kr(1, 6, fdur));
+	env = EnvGen.kr(Env.adsr(attack, decay, releaseTime: release), gate: gate, doneAction: 2);
+	sig = sig * env * amp;
+	Out.ar(outBus, sig!2);
+}).add
+)
 
