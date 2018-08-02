@@ -95,16 +95,33 @@ SynthDef(\fm2, {
 )
 (
 SynthDef(\pulsePad, {
-	|freq = 200, gate = 1, outBus = 0, fdur = 3, amp = 1, attack = 0.01, release = 1, decay = 0.3|
+	|freq = 200, gate = 1, outBus = 0, cutoff= 200, cutoff2 = 1200, fdur = 3, amp = 1, attack = 0.01, release = 1, decay = 0.3|
 	var sig, sig2, env;
 	sig = Pulse.ar(freq, width: 0.9);
 	sig2 = SawDPW.ar(freq * LinExp.kr(LFNoise1.kr(2), -1, 1, 0.0001, 0.1).midiratio) * 0.3;
 	sig = Mix.ar([sig, sig2]);
 	// sig = DFM1.ar(sig, XLine.kr(500, 1500, 2));
-	sig = MoogFF.ar(sig, freq * XLine.kr(1, 6, fdur));
+	sig = MoogFF.ar(sig, XLine.kr(cutoff, cutoff2,n fdur));
 	env = EnvGen.kr(Env.adsr(attack, decay, releaseTime: release), gate: gate, doneAction: 2);
 	sig = sig * env * amp;
 	Out.ar(outBus, sig!2);
 }).add
 )
 
+(
+~stutter = { |snd, reset, fragmentlength, rate = 1.0, maxdelay = 10|
+    var phase, fragment, del;
+	phase = Sweep.ar(reset);
+    fragment = { |ph| (ph - Delay1.ar(ph)) < 0 + Impulse.ar(0) }.value(phase / fragmentlength % 1);
+	del = Latch.ar(phase, fragment) + ((fragmentlength - Sweep.ar(fragment)) * (rate - 1));
+    DelayC.ar(snd, maxdelay, del);
+};
+SynthDef(\stuttertest, {
+    |outBus = 0, audioBus = 0, t_reset = 0, fragmentlength = 0.1, amp = 0.1|
+    var snd;
+	snd = In.ar(audioBus, 2);
+	// snd = PlayBuf.ar(1, buf, BufRateScale.kr(buf), loop: 1);
+    snd = ~stutter.(snd, t_reset, fragmentlength);
+    ReplaceOut.ar(outBus, snd * amp!2);
+}).add;
+)
