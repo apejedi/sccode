@@ -140,12 +140,15 @@ SynthDef("waveguideFlute", { arg scl = 0.2, freq = 440, ipress = 0.9, ibreath = 
 	ifqc = freq;
 
 	// noise envelope
-	kenv1 = EnvGen.kr(Env.new(
-		[ 0.0, 1.1 * ipress, ipress, ipress, 0.0 ], [ 0.06, 0.2, dur - 0.46, 0.2 ], 'linear' )
+	kenv1 = EnvGen.kr(
+		Env.adsr(0.06, 0.2,1, releaseTime: (dur - 0.46)), gate: gate
+		// Env.new([ 0.0, 1.1 * ipress, ipress, ipress, 0.0 ], [ 0.06, 0.2, dur - 0.46, 0.2 ], 'linear' )
 	);
 	// overall envelope
-	kenv2 = EnvGen.kr(Env.new(
-		[ 0.0, amp, amp, 0.0 ], [ 0.1, dur - 0.02, 0.1 ], 'linear' ), doneAction: 2
+	kenv2 = EnvGen.kr(
+		// Env.new([ 0.0, amp, amp, 0.0 ], [ 0.1, dur - 0.02, 0.1 ], 'linear' ),
+		Env.adsr(0.1, releaseTime: dur - 0.02), gate: gate,
+		doneAction: 2
 	);
 	// vibrato envelope
 	kenvibr = EnvGen.kr(Env.new( [ 0.0, 0.0, 1, 1, 0.0 ], [ 0.5, 0.5, dur - 1.5, 0.5 ], 'linear') );
@@ -162,8 +165,9 @@ SynthDef("waveguideFlute", { arg scl = 0.2, freq = 440, ipress = 0.9, ibreath = 
 	aflute1 = fdbckArray;
 	asum2 = asum1 + ( aflute1 * ifeedbk1 );
 
-	//ax = DelayL.ar( asum2, ifqc.reciprocal * 0.5, afqc * 0.5 );
-	ax = DelayC.ar( asum2, ifqc.reciprocal - block * 0.5, afqc * 0.5 - ( asum1/ifqc/cr ) + 0.001 );
+	// ax = DelayL.ar( asum2, ifqc.reciprocal * 0.5, afqc * 0.5 );
+	// ax = DelayC.ar( asum2, ifqc.reciprocal - block * 0.5, afqc * 0.5 - ( asum1/ifqc/cr ) + 0.001 );
+	ax = DelayC.ar( asum2, ifqc.reciprocal - block * 0.5, afqc * 0.5 - ( asum1/ifqc/cr ) + 0.01 );
 
 	apoly = ax - ( ax.cubed );
 	asum3 = apoly + ( aflute1 * ifeedbk2 );
@@ -175,7 +179,7 @@ SynthDef("waveguideFlute", { arg scl = 0.2, freq = 440, ipress = 0.9, ibreath = 
 
 	LocalOut.ar( fdbckArray );
 
-	signalOut = avalue;
+	signalOut = avalue * amp;
 
 	OffsetOut.ar( 0, [ signalOut * kenv2, signalOut * kenv2 ] );
 
