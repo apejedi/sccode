@@ -117,13 +117,30 @@ SynthDef(\pulsePad, {
     DelayC.ar(snd, maxdelay, del);
 };
 SynthDef(\stuttertest, {
-    |outBus = 0, audioBus = 0, t_reset = 0, fragmentlength = 0.1, amp = 0.1|
+    |outBus = 0, audioBus = 0, t_reset = 0, fragmentlength = 0.5, rate = 1, decay = 10, play = 1|
     var snd;
 	snd = In.ar(audioBus, 2);
 	// snd = PlayBuf.ar(1, buf, BufRateScale.kr(buf), loop: 1);
-    snd = ~stutter.(snd, t_reset, fragmentlength);
-    ReplaceOut.ar(outBus, snd * amp!2);
+    snd = ~stutter.(snd, t_reset, fragmentlength, rate, decay);
+	ReplaceOut.ar(outBus, Select.ar(play, [In.ar(audioBus, 2), snd!2]));
 }).add;
+SynthDef(\scramble, {
+	|outBus = 0, audioBus = 0, rate = 13, delaymin = 0, delaymax = 1|
+    var snd;
+    snd = In.ar(audioBus, 2);
+    snd = DelayC.ar(snd, 1.0, LFNoise0.ar(rate).range(delaymin, delaymax));
+	Out.ar(outBus, snd!2 * 0.3);
+}).add;
+SynthDef(\onsetDelay, {
+	|outBus = 0, audioBus = 0, onsetBus = 0, delay = 0.2, delayMax = 0.2|
+    var snd, reset;
+    snd = In.ar(audioBus, 2);
+	reset = Onsets.kr(FFT(LocalBuf(512), In.ar(onsetBus)), 0.5);
+    snd = ~stutter.(snd, reset, 0.05);
+    snd = DelayC.ar(snd, delayMax, delay);
+	Out.ar(outBus, snd!2 * 0.3);
+}).add;
+
 )
 (
 SynthDef("waveguideFlute", { arg scl = 0.2, freq = 440, ipress = 0.9, ibreath = 0.09, ifeedbk1 = 0.4, ifeedbk2 = 0.4, dur = 1, gate = 1, amp = 2;
@@ -158,6 +175,7 @@ SynthDef("waveguideFlute", { arg scl = 0.2, freq = 440, ipress = 0.9, ibreath = 
 	kvibr = SinOsc.ar( 5, 0, 0.1 * kenvibr );
 
 	asum1 = ( ibreath * aflow1 ) + kenv1 + kvibr;
+	// afqc = ifqc.reciprocal - ( asum1/20000 ) - ( 9/sr ) + ( ifqc/12000000 ) - block;
 	afqc = ifqc.reciprocal - ( asum1/20000 ) - ( 9/sr ) + ( ifqc/12000000 ) - block;
 
 	fdbckArray = LocalIn.ar( 1 );
@@ -167,13 +185,14 @@ SynthDef("waveguideFlute", { arg scl = 0.2, freq = 440, ipress = 0.9, ibreath = 
 
 	// ax = DelayL.ar( asum2, ifqc.reciprocal * 0.5, afqc * 0.5 );
 	// ax = DelayC.ar( asum2, ifqc.reciprocal - block * 0.5, afqc * 0.5 - ( asum1/ifqc/cr ) + 0.001 );
-	ax = DelayC.ar( asum2, ifqc.reciprocal - block * 0.5, afqc * 0.5 - ( asum1/ifqc/cr ) + 0.01 );
+	ax = DelayC.ar( asum2, ifqc.reciprocal - block * 4, afqc * 0.5 - ( asum1/ifqc/cr ) + 0.001 );
 
 	apoly = ax - ( ax.cubed );
 	asum3 = apoly + ( aflute1 * ifeedbk2 );
 	avalue = LPF.ar( asum3, 2000 );
 
 	aflute1 = DelayC.ar( avalue, ifqc.reciprocal - block, afqc );
+	// aflute1 = DelayC.ar( avalue, ifqc.reciprocal - block * 2, afqc );
 
 	fdbckArray = [ aflute1 ];
 
