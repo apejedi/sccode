@@ -205,3 +205,50 @@ SynthDef("waveguideFlute", { arg scl = 0.2, freq = 440, ipress = 0.9, ibreath = 
 }).add;
 
 )
+
+(
+SynthDef(\prophet2, {
+	|amp = 1, t_gate = 1, freq = 440, cutoff = 1500, fdur = 1, rq = 0.3,  attack = 1, decay = 2, release = 1, outBus = 0|
+	var snd, env;
+	snd = Mix.ar([
+		Pulse.ar(freq, (SinOsc.kr(1) + 1.2) * 0.1),
+		Pulse.ar(freq, (SinOsc.kr(0.3) + 1.2) * 0.4),
+		Pulse.ar(freq, (LFTri.kr(0.4) + 1.2) * 0.4),
+		Pulse.ar(freq, (LFTri.kr(0.4, 0.19) + 1.2) * 0.4),
+		Pulse.ar( freq/ 2, (LFTri.kr(LFNoise2.kr(0.2) + 2) + 1.2) * 0.8) * 0.5
+	]);
+	snd = Normalizer.ar(snd);
+	env = EnvGen.kr(Env.adsr(attack, decay, 0.7, release), t_gate);
+	snd = RLPF.ar(snd * env, Lag2.kr(cutoff, fdur), rq);
+	Out.ar(outBus, snd * amp !2);
+}).add
+)
+
+x = Synth(\prophet2)
+x.set(\t_gate, 1)
+x.free
+
+(
+
+SynthDef(\acidTest, {
+	|freq= 100, env = 1, accent = 1, gate = 1, outBus = 0, cutoff = 5000|
+	var w, p4, nt, ds,fr, lagfr, fenv, et,ac, acInt,gt;
+	var wv=0.1; //0-1, mix between saw and pulse
+	var ampComp, accMod=1;
+
+	lagfr = LagUD.ar(K2A.ar(freq),0.39, 0.09);
+	lagfr = lagfr * LFDNoise3.ar(0.3,0.0156,1);
+	w = DPW4Saw.ar(lagfr, 0.5 + (wv ** 4 * 550)).softclip;
+	ampComp = (1.05-wv) ** 6 + 1;
+	w = w * 0.9* ampComp * LFDNoise3.ar(0.5,0.04,1);
+	acInt = LPF.ar(K2A.ar(accent) * 12, 1);
+	fenv = Decay2.ar(env * 0.16 + (acInt * 0.02 * accMod) , 0.01, 0.12)  * LFDNoise3.ar(0.2,0.003,1);
+	w = RLPFD.ar(w, cutoff + (15000-cutoff * fenv)) * 2;
+	// w = RLPFD.ar(w, cutoff + (15000-cutoff * fenv), 0.6 + (acInt * 1.2 * accMod), 0.5) * 2;
+	w = LeakDC.ar(w, 0.995);
+	w = w + (HPF.ar(w,400,10).softclip * 0.04);
+	// w = w * Lag.ar(K2A.ar(gate), 0.001);
+	Out.ar(outBus ,w * 0.1 !2);
+}).add
+
+)
