@@ -15,9 +15,8 @@ SynthDef(\vibPad, {
 	env = EnvGen.kr(Env.adsr(2, sustainLevel: 0.5, releaseTime: 1, curve:-2), gate: gate, doneAction: 2);
 	sig = sig * env * amp;
 	Out.ar(outBus, sig !2);
-}).add
-)
-(
+}).add;
+
 SynthDef(\sawPad, {
 	|freq = 300, gate = 1, outBus = 0, amp = 1, cutoff =1000, cutoff2 = 3000, fdur = 3, release = 1|
 	var sig, sig2, env;
@@ -34,9 +33,8 @@ SynthDef(\sawPad, {
 	env = EnvGen.kr(Env.adsr(releaseTime: release), gate: gate, doneAction: 2);
 	sig = sig * env * amp;
 	Out.ar(outBus, sig!2);
-}).add
-)
-(
+}).add;
+
 SynthDef(\fmTest, {
 	|freq = 300, gate = 1, amp = 1, outBus = 0|
 	var sig, ctls, mod, env;
@@ -62,10 +60,8 @@ SynthDef(\fmTest, {
 	env = EnvGen.kr(Env.adsr(releaseTime: 2), gate: gate, doneAction: 2);
 	sig = sig * env * amp;
 	Out.ar(outBus, sig !2);
-}).add
-)
+}).add;
 
-(
 SynthDef(\fm2, {
 	|freq = 300, gate = 1, amp = 1, outBus = 0|
 	var sig, ctls, mod, env;
@@ -91,9 +87,8 @@ SynthDef(\fm2, {
 	env = EnvGen.kr(Env.adsr(0.01, releaseTime: 2), gate: gate, doneAction: 2);
 	sig = sig * env * amp;
 	Out.ar(outBus, sig !2)
-}).add
-)
-(
+}).add;
+
 SynthDef(\pulsePad, {
 	|freq = 200, gate = 1, outBus = 0, cutoff= 200, cutoff2 = 1200, fdur = 3, amp = 1, attack = 0.01, release = 1, decay = 0.3|
 	var sig, sig2, env;
@@ -105,8 +100,77 @@ SynthDef(\pulsePad, {
 	env = EnvGen.kr(Env.adsr(attack, decay, releaseTime: release), gate: gate, doneAction: 2);
 	sig = sig * env * amp;
 	Out.ar(outBus, sig!2);
+}).add;
+
+SynthDef(\percTest, {
+	|outBus = 0, tune = 1, distort = 4, cutoff1 = 5000, cutoff2 = 2000|
+	var sig, click, env;
+	sig = Pulse.ar(EnvGen.kr(Env([1000, 500, 100], [0.0001, 0.01], [-3, -2])) * tune
+		, LinLin.kr(SinOsc.kr(distort), -1, 1, 0.1, 0.9)
+	);
+	sig = DFM1.ar(sig, XLine.kr(cutoff1, cutoff2, 0.001));
+	click = Impulse.ar * EnvGen.kr(Env([0, 1, 0], [0.0001, 0.001])).clip2(0.2);
+	env = EnvGen.kr(Env.perc(0.001, 0.6), doneAction: 2);
+	sig = Mix.ar([click, sig]) * env;
+	Out.ar(outBus, sig!2);
+}).add;
+
+SynthDef(\prophet2, {
+	|amp = 1, t_gate = 1, freq = 440, cutoff = 1500, fdur = 1, rq = 0.3,  attack = 1, decay = 2, release = 1, outBus = 0|
+	var snd, env;
+	snd = Mix.ar([
+		Pulse.ar(freq, (SinOsc.kr(1) + 1.2) * 0.1),
+		Pulse.ar(freq, (SinOsc.kr(0.3) + 1.2) * 0.4),
+		Pulse.ar(freq, (LFTri.kr(0.4) + 1.2) * 0.4),
+		Pulse.ar(freq, (LFTri.kr(0.4, 0.19) + 1.2) * 0.4),
+		Pulse.ar( freq/ 2, (LFTri.kr(LFNoise2.kr(0.2) + 2) + 1.2) * 0.8) * 0.5
+	]);
+	snd = Normalizer.ar(snd);
+	env = EnvGen.kr(Env.adsr(attack, decay, 0.7, release), t_gate, doneAction: 2);
+	snd = RLPF.ar(snd * env, Lag2.kr(cutoff, fdur), rq);
+	Out.ar(outBus, snd * amp !2);
+}).add;
+
+SynthDef(\acidTest, {
+	|freq= 100, env = 1, accent = 1, gate = 1, outBus = 0, cutoff = 5000|
+	var w, p4, nt, ds,fr, lagfr, fenv, et,ac, acInt,gt;
+	var wv=0.1; //0-1, mix between saw and pulse
+	var ampComp, accMod=1;
+
+	lagfr = LagUD.ar(K2A.ar(freq),0.39, 0.09);
+	lagfr = lagfr * LFDNoise3.ar(0.3,0.0156,1);
+	w = DPW4Saw.ar(lagfr, 0.5 + (wv ** 4 * 550)).softclip;
+	ampComp = (1.05-wv) ** 6 + 1;
+	w = w * 0.9* ampComp * LFDNoise3.ar(0.5,0.04,1);
+	acInt = LPF.ar(K2A.ar(accent) * 12, 1);
+	fenv = Decay2.ar(env * 0.16 + (acInt * 0.02 * accMod) , 0.01, 0.12)  * LFDNoise3.ar(0.2,0.003,1);
+	w = RLPFD.ar(w, cutoff + (15000-cutoff * fenv)) * 2;
+	// w = RLPFD.ar(w, cutoff + (15000-cutoff * fenv), 0.6 + (acInt * 1.2 * accMod), 0.5) * 2;
+	w = LeakDC.ar(w, 0.995);
+	w = w + (HPF.ar(w,400,10).softclip * 0.04);
+	// w = w * Lag.ar(K2A.ar(gate), 0.001);
+	Out.ar(outBus ,w * 0.1 !2);
+}).add;
+
+SynthDef(\bpfsaw2, {
+	|freq = 500, atk = 2, sus = 0, rel = 3, c1 = 1, c2 = -1, detune = 0.2, pan = 0, cfhzmin = 0.1, cfhzmax = 0.3, cfmin = 500, cfmax = 2000, rqmin = 0.1, rqmax = 0.2, lsf = 200, ldb = 0, hsf = 6000, hdb = 0, amp = 1, rs = 0.5, outBus = 0|
+	var env, sig, noise;
+	env = EnvGen.kr(Env.new([0, 1, 1, 0], [atk, sus, rel], [c1, 0, c2]), doneAction: 2);
+	freq = freq * (LFNoise0.kr(0.5) * detune).midiratio;
+	sig = Saw.ar(freq!2);
+	noise = LinExp.kr(LFNoise1.kr(LinExp.kr(LFNoise1.kr(4), -1 , 1, cfhzmin, cfhzmax)), -1, 1, cfmin, cfmax);
+	sig = BPF.ar(sig, noise, LinExp.kr(LFNoise1.kr(0.1), -1, 1, rqmin, rqmax));
+	sig = BLowShelf.ar(sig, lsf, rs, ldb);
+	sig = BHiShelf.ar(sig, hsf, rs, hdb);
+	sig = Balance2.ar(sig, sig);
+	sig = sig * env * amp;
+	Out.ar(outBus, sig);
 }).add
+
 )
+
+
+
 
 (
 ~stutter = { |snd, reset, fragmentlength, rate = 1.0, maxdelay = 10|
@@ -140,64 +204,5 @@ SynthDef(\onsetDelay, {
     snd = DelayC.ar(snd, delayMax, delay);
 	Out.ar(outBus, snd!2 * 0.3);
 }).add;
-
-)
-(
-(
-SynthDef(\percTest, {
-	|outBus = 0, tune = 1, distort = 4, cutoff1 = 5000, cutoff2 = 2000|
-	var sig, click, env;
-	sig = Pulse.ar(EnvGen.kr(Env([1000, 500, 100], [0.0001, 0.01], [-3, -2])) * tune
-		, LinLin.kr(SinOsc.kr(distort), -1, 1, 0.1, 0.9)
-	);
-	sig = DFM1.ar(sig, XLine.kr(cutoff1, cutoff2, 0.001));
-	click = Impulse.ar * EnvGen.kr(Env([0, 1, 0], [0.0001, 0.001])).clip2(0.2);
-	env = EnvGen.kr(Env.perc(0.001, 0.6), doneAction: 2);
-	sig = Mix.ar([click, sig]) * env;
-	Out.ar(outBus, sig!2);
-}).add
-
-)
-
-(
-SynthDef(\prophet2, {
-	|amp = 1, t_gate = 1, freq = 440, cutoff = 1500, fdur = 1, rq = 0.3,  attack = 1, decay = 2, release = 1, outBus = 0|
-	var snd, env;
-	snd = Mix.ar([
-		Pulse.ar(freq, (SinOsc.kr(1) + 1.2) * 0.1),
-		Pulse.ar(freq, (SinOsc.kr(0.3) + 1.2) * 0.4),
-		Pulse.ar(freq, (LFTri.kr(0.4) + 1.2) * 0.4),
-		Pulse.ar(freq, (LFTri.kr(0.4, 0.19) + 1.2) * 0.4),
-		Pulse.ar( freq/ 2, (LFTri.kr(LFNoise2.kr(0.2) + 2) + 1.2) * 0.8) * 0.5
-	]);
-	snd = Normalizer.ar(snd);
-	env = EnvGen.kr(Env.adsr(attack, decay, 0.7, release), t_gate);
-	snd = RLPF.ar(snd * env, Lag2.kr(cutoff, fdur), rq);
-	Out.ar(outBus, snd * amp !2);
-}).add
-)
-
-(
-
-SynthDef(\acidTest, {
-	|freq= 100, env = 1, accent = 1, gate = 1, outBus = 0, cutoff = 5000|
-	var w, p4, nt, ds,fr, lagfr, fenv, et,ac, acInt,gt;
-	var wv=0.1; //0-1, mix between saw and pulse
-	var ampComp, accMod=1;
-
-	lagfr = LagUD.ar(K2A.ar(freq),0.39, 0.09);
-	lagfr = lagfr * LFDNoise3.ar(0.3,0.0156,1);
-	w = DPW4Saw.ar(lagfr, 0.5 + (wv ** 4 * 550)).softclip;
-	ampComp = (1.05-wv) ** 6 + 1;
-	w = w * 0.9* ampComp * LFDNoise3.ar(0.5,0.04,1);
-	acInt = LPF.ar(K2A.ar(accent) * 12, 1);
-	fenv = Decay2.ar(env * 0.16 + (acInt * 0.02 * accMod) , 0.01, 0.12)  * LFDNoise3.ar(0.2,0.003,1);
-	w = RLPFD.ar(w, cutoff + (15000-cutoff * fenv)) * 2;
-	// w = RLPFD.ar(w, cutoff + (15000-cutoff * fenv), 0.6 + (acInt * 1.2 * accMod), 0.5) * 2;
-	w = LeakDC.ar(w, 0.995);
-	w = w + (HPF.ar(w,400,10).softclip * 0.04);
-	// w = w * Lag.ar(K2A.ar(gate), 0.001);
-	Out.ar(outBus ,w * 0.1 !2);
-}).add
 
 )
