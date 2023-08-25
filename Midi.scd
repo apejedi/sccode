@@ -20,10 +20,25 @@ MIDIdef.noteOn(\noteOnHandler, {
 		\freq, number.midicps,
 		\cutoff, 600,
 		\cutoff2, 1000,
-		\amp, 0.3,
+		\amp, 0.5,
+		\release, 2,
 		//\amp, velocity.linexp(1, 127, 0.01, 0.03),
 		\gate, 1]);
 });
+
+MIDIdef.noteOn(\noteOnHandler, {
+	arg velocity,  number, channel, source;
+	~notes[number] = Synth.new(\bass,[
+		\freq, number.midicps,
+		\amp, 0.5,
+		\release, 2,
+		\attack, 0.01,
+		//\amp, velocity.linexp(1, 127, 0.01, 0.03),
+		\gate, 1]);
+});
+
+
+
 MIDIdef.noteOff(\noteOffHandler, {
 	arg velocity, number;
 	~notes[number].set(\gate, 0);

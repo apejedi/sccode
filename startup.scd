@@ -1,12 +1,14 @@
 (
+Server.default.options.outDevice_("ASIO : ReaRoute ASIO (x64)");
+Server.default.options.numOutputBusChannels = 16;
+)
+(
 s.options.maxLogins = 12;
 
 s.options.memSize_(65536 * 4);
 
 
-//Server.default.options.outDevice_("ASIO : ReaRoute ASIO (x64)")
 //Server.default.options.outDevice_("Realtek HD Audio 2nd output (Re   (device #5 with 0 ins 2 outs)")
-//Server.default.options.numOutputBusChannels = 16
 
 OSCdef.freeAll;
 
@@ -66,6 +68,19 @@ OSCdef.new(\controls, ~getSynthControls, '/get_controls');
 	});
 };
 
+~client = NetAddr.new("127.0.0.1", 6814);
+
+~evalCode = { |msg, time, replyAddr, recvPort|
+		var resp = msg[1].asString.interpretPrint;
+		var key = "default";
+		if (msg.size > 2) {
+			key = msg[2];
+		};
+		~client.sendMsg("/response", resp, key);
+		//replyAddr.sendMsg("/response", resp);
+};
+
+OSCdef.new(\evalCode, ~evalCode, '/eval_code');
 
 OSCdef.new(\handleGated, ~handleGated, '/s_new');
 
@@ -75,6 +90,6 @@ OSCdef.new(\stopGated, ~stopGated ,'/stop_gated');
 
 )
 (
-//s.boot;
-//StageLimiter.activate;
+s.boot;
+StageLimiter.activate;
 )
