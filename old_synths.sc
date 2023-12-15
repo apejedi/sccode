@@ -125,5 +125,34 @@ SynthDef(\sin, {
 	env = EnvGen.kr(Env.perc(atk, release), doneAction: 2);
 	sig = sig * env * amp;
 	Out.ar(outBus, sig!2);
-}).add
+}).add;
+
+SynthDef(\acidBass, {
+	|note = 50, amp=1, lg=1, dur=1, attack=0.001, outBus=0, reverb=1|
+	var a,r,la,env1,env2, sig, sig1;
+	a = attack * dur;
+	r = 0.04 * dur;
+	la = Lag.kr(note, (1 - Line.kr(lg, lg, 0.001)) * 0.12);
+	env1 = EnvGen.kr(Env.perc(a, dur), doneAction: Done.freeSelf);
+	env2 = EnvGen.kr(Env.adsr(a, dur, 0, r, 70, -4));
+	sig = (LFPulse.ar(note.midicps, 0, 0.51) * 2) - 1;
+	sig = RLPF.ar(sig, (note + env2).midicps, 0.3);
+	sig1 =  sig * env1 * amp;
+	//sig = BPF.ar(sig1, 3500);
+	//sig = Select.ar(reverb, [sig, FreeVerb.ar(sig, 1, 0.95, 0.15)]);
+	//sig = (EnvGen.kr(Env.new([0.02, 0.3, 0.02], [0.4, 0.01], [3 -4], 1)) * sig) + sig;
+	//sig = HPF.ar(sig * 1.2, 40);
+	//sig = Limiter.ar(sig, 1, 0.02);
+	Out.ar(outBus, sig1!2);
+}).add;
+
+SynthDef(\bass2, {
+	|atk=0.001, fDur=0.001, echo=1, decay=0.6, amp=1, freq=80, cutoff=2000, cutoff2=2000, outBus=0|
+	var sig;
+	sig = Select.ar(echo, [DC.ar(1), Decay2.ar(Impulse.ar(atk/2), atk, decay)]) * Mix.ar(Pulse.ar([freq, (freq + 1)], 0.3), amp);
+	sig = MoogFF.ar(sig, XLine.kr(cutoff, cutoff2, fDur), 3);
+	sig = sig * EnvGen.kr(Env.perc(atk, decay), doneAction:2);
+	Out.ar(outBus, sig!2);
+}).add;
+
 )
