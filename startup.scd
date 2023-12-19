@@ -1,11 +1,17 @@
 (
 Server.default.options.outDevice_("ASIO : ReaRoute ASIO (x64)");
 Server.default.options.numOutputBusChannels = 16;
+//SimpleMix(10).connect.start.gui;
 )
 (
-s.options.maxLogins = 12;
+s.options.maxLogins = 1;
 
 s.options.memSize_(65536 * 4);
+
+// NUMBER OF BUFFERS GETS DIVIDED BY NUMBER OF LOGINS!
+s.options.numBuffers = 1026;
+
+s.options.numAudioBusChannels = 1024;
 
 
 //Server.default.options.outDevice_("Realtek HD Audio 2nd output (Re   (device #5 with 0 ins 2 outs)")
@@ -91,5 +97,8 @@ OSCdef.new(\stopGated, ~stopGated ,'/stop_gated');
 )
 (
 s.boot;
+s.waitForBoot({
+	20.collect{Bus.audio(s, 2)};
+});
 StageLimiter.activate;
 )

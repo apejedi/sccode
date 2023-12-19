@@ -155,4 +155,32 @@ SynthDef(\bass2, {
 	Out.ar(outBus, sig!2);
 }).add;
 
+SynthDef(\sample, {
+	|num, outBus=0|
+	Out.ar(outBus, PlayBuf.ar(2, num, doneAction: 2));
+}).add;
+
+SynthDef(\oKick, {
+	|amp = 0.5, outBus=0|
+	var env0, env1, env1m, o;
+	env0 = EnvGen.kr(Env.new([0.5, 1, 0.5, 0], [0.005, 0.06, 0.26], [-4, -2, -4]), doneAction: 2);
+	env1 = EnvGen.kr(Env.new([110, 59, 29], [0.005, 0.29], [-4, -5]));
+	env1m = env1.midicps;
+	o = LFPulse.ar(env1m, 0, 0.5) - 0.5;
+	o = o + WhiteNoise.ar;
+	o = env0 * LPF.ar(o, env1m * 1.5);
+	o = o + (env0 * SinOsc.kr(env1m, 0.5));
+	o = o * 1.2;
+	o = o.clip2(1);
+	o = o * amp * 0.5;
+	Out.ar(outBus, o!2);
+}).add;
+
+SynthDef(\clipMixer, {
+	|audioBus=10, volume=1, startRelease=0|
+	var source;
+	source = In.ar(audioBus) * volume;
+	DetectSilence.ar(Select.ar(startRelease, [DC.ar(1), source]), doneAction: 14);
+	Out.ar(0, source);
+}).add;
 )
