@@ -179,8 +179,32 @@ SynthDef(\oKick, {
 SynthDef(\clipMixer, {
 	|audioBus=10, volume=1, startRelease=0|
 	var source;
-	source = In.ar(audioBus) * volume;
+	source = In.ar(audioBus, 2) * volume;
 	DetectSilence.ar(Select.ar(startRelease, [DC.ar(1), source]), doneAction: 14);
 	Out.ar(0, source);
 }).add;
+
+
+SynthDef(\bassSynth, {
+	|freq = 200, attack = 0.1, amp=1, release=1, detune=3, bwr=1, outBus=0|
+	var freqV, sig, sig2, env;
+	freqV = LinExp.kr(LFNoise0.kr(2), -1, 1, 0.1, detune) + freq;
+	sig =  VarSaw.ar(freqV!2, 0, 1);
+	sig2 = Resonz.ar(sig, freq, bwr);
+	env = EnvGen.kr(Env.perc(attack, release), doneAction: 2);
+	sig = sig + sig2;
+	sig = sig * amp * env;
+	Out.ar(outBus, sig!2);
+}).add;
+
+SynthDef(\klangTest, {
+	|freq = 440, amp=1, atk=0.1, dur=3, outBus=0|
+	var sig, env;
+	sig = Klang.ar(`[[freq * 0.5, freq * 2/3, freq, freq * 4/3, freq * 2, freq * 5/2],
+		[0.2, 0.1, 0.4, 0.1, 0.1, 0.1], [1/6, 1/6, 1/6, 1/6, 1/6, 1/6]]);
+	env = EnvGen.kr(Env.perc(atk * dur, (1- atk) * dur), doneAction: 2);
+	sig = sig * env * amp;
+	Out.ar(outBus, sig!2);
+}).add;
+
 )

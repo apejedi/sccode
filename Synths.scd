@@ -165,8 +165,7 @@ SynthDef(\bpfsaw2, {
 	sig = Balance2.ar(sig, sig);
 	sig = sig * env * amp;
 	Out.ar(outBus, sig);
-}).add
-
+}).add;
 )
 
 

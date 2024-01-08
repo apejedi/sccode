@@ -4,12 +4,12 @@ Server.default.options.numOutputBusChannels = 16;
 //SimpleMix(10).connect.start.gui;
 )
 (
-s.options.maxLogins = 1;
+s.options.maxLogins = 4;
 
 s.options.memSize_(65536 * 4);
 
 // NUMBER OF BUFFERS GETS DIVIDED BY NUMBER OF LOGINS!
-s.options.numBuffers = 1026;
+s.options.numBuffers = 2046;
 
 s.options.numAudioBusChannels = 1024;
 
@@ -35,7 +35,8 @@ OSCdef.new(\controls, ~getSynthControls, '/get_controls');
 ~nodes = ();
 ~handleGated = {
 	|msg|
-	var node, synth, key, args;
+	var node, synth, key, target, args;
+	target = msg[4];
 	msg.removeAt(0);
 	synth = msg[0];
 	msg.removeAt(0);
@@ -52,7 +53,7 @@ OSCdef.new(\controls, ~getSynthControls, '/get_controls');
 			~gated[synth][key].set(ctrl[0], ctrl[1]);
 		});
 	}, {
-		node = Synth(synth, msg);
+		node = Synth(synth, msg, target);
 		~gated[synth][key] = node;
 		~nodes[node.asNodeID] = [synth, key];
 	});
@@ -82,8 +83,8 @@ OSCdef.new(\controls, ~getSynthControls, '/get_controls');
 		if (msg.size > 2) {
 			key = msg[2];
 		};
-		~client.sendMsg("/response", resp, key);
-		//replyAddr.sendMsg("/response", resp);
+		//~client.sendMsg("/response", resp, key);
+		replyAddr.sendMsg("/response", resp);
 };
 
 OSCdef.new(\evalCode, ~evalCode, '/eval_code');
@@ -97,8 +98,8 @@ OSCdef.new(\stopGated, ~stopGated ,'/stop_gated');
 )
 (
 s.boot;
-s.waitForBoot({
-	20.collect{Bus.audio(s, 2)};
-});
+//s.waitForBoot({
+	//20.collect{Bus.audio(s, 2)};
+//});
 StageLimiter.activate;
 )
