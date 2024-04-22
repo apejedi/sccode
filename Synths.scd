@@ -116,7 +116,7 @@ SynthDef(\percTest, {
 }).add;
 
 SynthDef(\prophet2, {
-	|amp = 1, t_gate = 1, freq = 440, cutoff = 1500, fdur = 1, rq = 0.3,  attack = 1, decay = 2, release = 1, outBus = 0|
+	|amp = 1, gate = 1, freq = 440, cutoff = 1500, fdur = 1, rq = 0.3,  attack = 1, decay = 2, release = 1, outBus = 0|
 	var snd, env;
 	snd = Mix.ar([
 		Pulse.ar(freq, (SinOsc.kr(1) + 1.2) * 0.1),
@@ -126,7 +126,7 @@ SynthDef(\prophet2, {
 		Pulse.ar( freq/ 2, (LFTri.kr(LFNoise2.kr(0.2) + 2) + 1.2) * 0.8) * 0.5
 	]);
 	snd = Normalizer.ar(snd);
-	env = EnvGen.kr(Env.adsr(attack, decay, 0.7, release), t_gate, doneAction: 2);
+	env = EnvGen.kr(Env.adsr(attack, decay, 0.7, release), gate, doneAction: 2);
 	snd = RLPF.ar(snd * env, Lag2.kr(cutoff, fdur), rq);
 	Out.ar(outBus, snd * amp !2);
 }).add;
@@ -166,9 +166,28 @@ SynthDef(\bpfsaw2, {
 	sig = sig * env * amp;
 	Out.ar(outBus, sig);
 }).add;
+
+SynthDef(\hum, {
+	|freq = 200, q = 0.2, humFreq = 2, filterFreqMul = 2, gate = 1|
+	var sig, env, filter;
+	sig = SawDPW.ar([freq, freq + LFNoise1.kr(10)]);
+	sig = BMoog.ar(sig, SinOsc.ar(humFreq).linlin(-1, 1, freq, freq * filterFreqMul), q, 2);
+	env = EnvGen.kr(Env.asr, gate, doneAction: 2);
+	Out.ar(0, sig * env);
+}).add;
 )
 
-
+SynthDef(\bowedGated, {
+	|freq = 440, outBus = 0, attack = 0.2, decay= 0.3, release=1, sustain=0.5, gate = 1, ampB= 0.5, start= 0.1, rate=1, end = 0.7, force= 1, dur= 2, c1= 0.25, c3= 31, mistune=8, imp=2, amp 1|
+	var vib, rest, env, pos, son;
+	vib = (Gendy1.kr(1, 1, 1, 1, 0.1, 4) * 0.003) + 1;
+	env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
+	pos = Phasor.kr(gate, rate/SampleRate.ir, start, end);
+	son = DWGBowedTor.ar(freq * vib, ampB, force, 1, pos, 0.1, c1, c3, impZ:imp, mistune: mistune, c3tor: 10000, c3: 10);
+	son = DWGSoundBoard.ar(son);
+	son = son * env * amp;
+	Out.ar(outBus, son!2);
+}).add;
 
 
 (

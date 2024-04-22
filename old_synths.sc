@@ -157,7 +157,8 @@ SynthDef(\bass2, {
 
 SynthDef(\sample, {
 	|num, outBus=0|
-	Out.ar(outBus, PlayBuf.ar(2, num, doneAction: 2));
+	var sig = PlayBuf.ar(1, num, doneAction: 2);
+	Out.ar(outBus, sig!2);
 }).add;
 
 SynthDef(\oKick, {
@@ -205,6 +206,27 @@ SynthDef(\klangTest, {
 	env = EnvGen.kr(Env.perc(atk * dur, (1- atk) * dur), doneAction: 2);
 	sig = sig * env * amp;
 	Out.ar(outBus, sig!2);
+}).add;
+
+SynthDef(\sin, {
+	|freq = 300, dur = 2, amp = 1, outBus = 0, atk = 0.01|
+	var env, sig;
+	env = EnvGen.kr(Env.new([0.1, 1, 0], [(atk * dur), (dur * (1 - atk))], 'welch'), doneAction: 2);
+	sig = env * Mix.ar([SinOsc.ar(freq), SinOsc.ar(freq + 19.midicps) * 0.08, SinOsc.ar(freq - 12.midicps) * 0.04]) * amp;
+	Out.ar(outBus, sig!2);
+}).add;
+
+SynthDef(\bowed, {
+	|freq = 440, outBus = 0, atk = 0.2, ampB= 0.5, start= 0.1, end = 0.7, force= 1, dur= 2, c1= 0.25, c3= 31, amp 1|
+	var vib, rest, env, pos, son;
+	vib = (Gendy1.kr(1, 1, 1, 1, 0.1, 4) * 0.003) + 1;
+	rest = 1 - atk;
+	env = EnvGen.kr(Env.new([0, 0.7, 1, 0.8, 0], [(dur * atk), (dur * 0.2 * rest), (dur * 0.4 * rest), (dur * rest * 0.4)]), doneAction: 2);
+	pos = Line.kr(start, end, dur);
+	son = DWGBowedTor.ar(freq * vib, ampB, force, 1, pos, 0.1, c1, c3, impZ:2, mistune: 8, c3tor: 10000, c3: 10);
+	son = DWGSoundBoard.ar(son);
+	son = son * env * amp;
+	Out.ar(outBus, son!2);
 }).add;
 
 )
