@@ -175,7 +175,7 @@ SynthDef(\hum, {
 	env = EnvGen.kr(Env.asr, gate, doneAction: 2);
 	Out.ar(0, sig * env);
 }).add;
-)
+
 
 SynthDef(\bowedGated, {
 	|freq = 440, outBus = 0, attack = 0.2, decay= 0.3, release=1, sustain=0.5, gate = 1, ampB= 0.5, start= 0.1, rate=1, end = 0.7, force= 1, dur= 2, c1= 0.25, c3= 31, mistune=8, imp=2, amp 1|
@@ -188,6 +188,8 @@ SynthDef(\bowedGated, {
 	son = son * env * amp;
 	Out.ar(outBus, son!2);
 }).add;
+
+)
 
 
 (

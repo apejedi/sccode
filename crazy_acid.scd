@@ -24,10 +24,10 @@ x = { var lk = [0,3,7,9],
 	ffa.size.do({ |i| var pn = [2,4,8].choose;
 		if ( 0.2.coin, { ffa[i] = Select.kr(Stepper.kr(cx, 0,0,pn-1), { rrand( 4, 70 ) } ! n) }) });
 	fxc = Lag2.kr( Select.kr(oi, ffa), 0.04); //second frequency signal
-	ra = { rrand(0.05,0.5) } ! n;
-	rq = Lag.kr( Select.kr(oi, ra), 0.04);
+	ra = { rrand(0.05,0.5) } ! n; //random number for each step
+	rq = Lag.kr( Select.kr(oi, ra), 0.04); //signal for above numbers with some lag
 	eca = { [-4,0,-1].choose } ! n;
-	ec = Select.kr(oi,eca);
+	ec = Select.kr(oi,eca); //random gain for sound signal
 	o = Saw.ar(xc) + Pulse.ar(xc * 0.01.midiratio,1-rq) + Pulse.ar(xc *0.04.midiratio,LFTri.ar(ox/n).range(0.1,0.9),0.02) + Pulse.ar(xc *
 		24.midiratio,LFTri.ar(ox/n/4).range(0.8,0.01),0.05);
 	era = { rrand(0.8,0.4) } ! 4;

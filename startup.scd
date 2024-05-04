@@ -44,25 +44,35 @@ OSCdef.new(\controls, ~getSynthControls, '/get_controls');
 	3.do{msg.removeAt(0)};
 	args = msg.clump(2);
 
-	if (~gated.includesKey(synth).not, {
-		~gated[synth] = ();
+	if (~gated.includesKey(target).not, {
+		~gated[target] = ();
 	});
 
-	if (~gated[synth].includesKey(key), {
+	if (~gated[target].includesKey(key), {
 		args.do({|ctrl|
-			~gated[synth][key].set(ctrl[0], ctrl[1]);
+			~gated[target][key].set(ctrl[0], ctrl[1]);
 		});
 	}, {
 		node = Synth(synth, msg, target);
-		~gated[synth][key] = node;
-		~nodes[node.asNodeID] = [synth, key];
+		~gated[target][key] = node;
+		//~nodes[node.asNodeID] = [synth, key];
 	});
 };
 
 ~stopGated = {
-	~gated.do({|nodes, synth| nodes.do({|node, key| node.set('gate', 0)}); });
-	~gated = ();
-	~nodes = ();
+	|msg|
+	if (msg[1] == nil, {
+		~gated.do({|nodes, synth| nodes.do({|node, key| node.set('gate', 0)}); });
+		~gated = ();
+		~nodes = ();
+	}, {
+		~gated[msg[1]].pairsDo({|key, node|
+			node.postln;
+			node.set('gate', 0);
+		});
+		~gated.removeAt(msg[1]);
+	});
+
 };
 
 ~deleteNode = {

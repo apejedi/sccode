@@ -151,7 +151,7 @@ SynthDef(\bass2, {
 	var sig;
 	sig = Select.ar(echo, [DC.ar(1), Decay2.ar(Impulse.ar(atk/2), atk, decay)]) * Mix.ar(Pulse.ar([freq, (freq + 1)], 0.3), amp);
 	sig = MoogFF.ar(sig, XLine.kr(cutoff, cutoff2, fDur), 3);
-	sig = sig * EnvGen.kr(Env.perc(atk, decay), doneAction:2);
+	sig = sig * EnvGen.kr(Env.perc(atk, decay), doneAction:2) * amp;
 	Out.ar(outBus, sig!2);
 }).add;
 
