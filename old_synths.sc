@@ -229,4 +229,19 @@ SynthDef(\bowed, {
 	Out.ar(outBus, son!2);
 }).add;
 
+SynthDef(\cs80, {
+	|freq=880, amp=0.5, dur=3, atk=0.3, rq=0.5, cutoff=10000, dtune=0.002, vibrate=4, vibdepth=0.015, freqLag=0.1, outBus=0 |
+	var env, sig, vib, att, rest;
+	att = dur * atk;
+	rest = dur - att;
+	freq = Lag.kr(freq, freqLag);
+	env = EnvGen.kr(Env.new([0, 0.5, 1, 0.001], [att, rest * 0.2, rest * 0.5, rest * 0.3]),  doneAction: 2);
+	vib = LinLin.kr(SinOsc.kr(vibrate), -1, 1, -1 * vibdepth, vibdepth) + 1;
+	freq = freq * vib;
+	sig = Mix.ar(env * amp * Saw.ar([freq, freq * (1 + dtune)]));
+	sig = RLPF.ar(sig, cutoff, rq);
+	Out.ar(outBus, sig!2);
+}).add;
+
+
 )

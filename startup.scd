@@ -36,7 +36,11 @@ OSCdef.new(\controls, ~getSynthControls, '/get_controls');
 ~handleGated = {
 	|msg|
 	var node, synth, key, target, args;
-	target = msg[4];
+	if (msg[4] == nil, {
+		target = 0;
+	}, {
+		target = msg[4];
+	});
 	msg.removeAt(0);
 	synth = msg[0];
 	msg.removeAt(0);
@@ -55,7 +59,7 @@ OSCdef.new(\controls, ~getSynthControls, '/get_controls');
 	}, {
 		node = Synth(synth, msg, target);
 		~gated[target][key] = node;
-		//~nodes[node.asNodeID] = [synth, key];
+		~nodes[node.asNodeID] = [target, key];
 	});
 };
 
@@ -67,10 +71,9 @@ OSCdef.new(\controls, ~getSynthControls, '/get_controls');
 		~nodes = ();
 	}, {
 		~gated[msg[1]].pairsDo({|key, node|
-			node.postln;
 			node.set('gate', 0);
 		});
-		~gated.removeAt(msg[1]);
+		//~gated.removeAt(msg[1]);
 	});
 
 };

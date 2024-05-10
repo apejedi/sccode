@@ -168,12 +168,12 @@ SynthDef(\bpfsaw2, {
 }).add;
 
 SynthDef(\hum, {
-	|freq = 200, q = 0.2, humFreq = 2, filterFreqMul = 2, gate = 1|
+	|freq = 200, q = 0.2, humFreq = 2, filterFreqMul = 2, gate = 1, outBus = 0|
 	var sig, env, filter;
 	sig = SawDPW.ar([freq, freq + LFNoise1.kr(10)]);
 	sig = BMoog.ar(sig, SinOsc.ar(humFreq).linlin(-1, 1, freq, freq * filterFreqMul), q, 2);
 	env = EnvGen.kr(Env.asr, gate, doneAction: 2);
-	Out.ar(0, sig * env);
+	Out.ar(outBus, sig * env);
 }).add;
 
 
