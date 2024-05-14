@@ -21,13 +21,14 @@ OSCdef.freeAll;
 ~getSynthControls = {
 	|msg, time, addr|
 	var synth, controls;
-	controls = ['/controls'];
+	synth = msg[1].asString;
+	controls = [synth];
 	SynthDescLib.global.synthDescs.do{|s|
-		controls = controls.add(s.name);
-		controls = controls.add(s.controlNames.size);
-		controls = controls ++ s.controlNames;
+		if (s.name == synth, {
+			s.controls.do{|c| controls = controls ++ c.name ++ c.defaultValue};
+		}, {});
 	};
-	addr.sendRaw(controls.asRawOSC);
+	addr.sendMsg("/synth_controls", *controls);
 };
 OSCdef.new(\controls, ~getSynthControls, '/get_controls');
 
@@ -47,7 +48,6 @@ OSCdef.new(\controls, ~getSynthControls, '/get_controls');
 	key = msg[msg.atIdentityHash(\freq) + 1].cpsmidi.round;
 	3.do{msg.removeAt(0)};
 	args = msg.clump(2);
-
 	if (~gated.includesKey(target).not, {
 		~gated[target] = ();
 	});

@@ -18,7 +18,7 @@ SynthDef(\vibPad, {
 }).add;
 
 SynthDef(\sawPad, {
-	|freq = 300, gate = 1, outBus = 0, amp = 1, cutoff =1000, cutoff2 = 3000, fdur = 3, release = 1|
+	|freq = 300, attack = 0.01, gate = 1, outBus = 0, amp = 1, cutoff =1000, cutoff2 = 3000, fdur = 3, release = 1|
 	var sig, sig2, env;
 	sig = VarSaw.ar(freq, width: LinLin.kr(LFTri.kr(LinLin.kr(SinOsc.kr(100), -1, 1, 2, 10)), -1, 1, 0.2, 1.5)) * 0.1;
 	sig2 = SawDPW.ar([freq, freq * 1.0001]);
@@ -30,7 +30,7 @@ SynthDef(\sawPad, {
 	// sig = BHiShelf.ar(sig, 1000, db: -18);
 	// sig = MoogVCF.ar(sig, 1500, 0.3);
 	// sig = LPF.ar(sig, LinLin.kr(SinOsc.kr(LinLin.kr(SinOsc.kr(LinLin.kr(SinOsc.kr(0.5), -1, 1, 1, 12)), -1, 1, 1, 12)), -1, 1, 1000, 5000));
-	env = EnvGen.kr(Env.adsr(releaseTime: release), gate: gate, doneAction: 2);
+	env = EnvGen.kr(Env.adsr(attackTime: attack, releaseTime: release), gate: gate, doneAction: 2);
 	sig = sig * env * amp;
 	Out.ar(outBus, sig!2);
 }).add;
